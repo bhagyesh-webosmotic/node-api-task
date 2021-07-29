@@ -4,7 +4,7 @@ export default multer({
 	storage: multer.diskStorage({}),
 	limits: { fileSize: 1048576 },
 	fileFilter: (req, file, cb: any) => {
-		if (!file.mimetype.match(/jpe|jpeg|png$i/)) {
+		if (!file.mimetype.match(/jpe|jpeg|png/)) {
 			cb(new Error("File is not supported"), false);
 			return;
 		}
@@ -16,7 +16,7 @@ export const logo = multer({
 	storage: multer.diskStorage({}),
 	limits: { fileSize: 1048576 },
 	fileFilter: (req, file, cb: any) => {
-		if (!file.mimetype.match(/png$i/)) {
+		if (!file.mimetype.match(/png/)) {
 			cb(new Error("File is not supported"), false);
 			return;
 		}

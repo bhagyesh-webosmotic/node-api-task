@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+
+import { contactNumber, email, DOB } from "../const/regex";
+import { designation } from "../const/enum";
 const employeeSchema = new mongoose.Schema(
 	{
 		firstName: {
@@ -21,7 +24,7 @@ const employeeSchema = new mongoose.Schema(
 			trim: true,
 			validate: {
 				validator: function (v: any) {
-					var re = /^\d{10}$/;
+					var re = contactNumber;
 					return v == null || re.test(v);
 				},
 				message: "Provided phone number is invalid.",
@@ -29,12 +32,12 @@ const employeeSchema = new mongoose.Schema(
 		},
 		email: {
 			type: String,
-			unique: true,
+			unique: [true, "not unique email"],
 			trim: true,
 			lowercase: true,
 			validate: {
 				validator: function (v: any) {
-					return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
+					return email.test(v);
 				},
 				message: "Please enter a valid email",
 			},
@@ -43,7 +46,7 @@ const employeeSchema = new mongoose.Schema(
 		designation: {
 			type: String,
 			required: true,
-			enum: ["developer", "leader", "manager"],
+			enum: designation,
 		},
 		salary: {
 			type: Number,
@@ -63,7 +66,7 @@ const employeeSchema = new mongoose.Schema(
 			maxlength: 100,
 			validate: {
 				validator: function (v: any) {
-					return /^\d\d\d\d-(0[1-9]|1[0-2])-(0[1-9]|[1-2]\d|3[0-1])$/.test(v);
+					return DOB.test(v);
 				},
 				message: `not a valid date`,
 			},

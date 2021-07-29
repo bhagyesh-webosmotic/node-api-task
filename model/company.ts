@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+
+import { contactNumber, email } from "../const/regex";
 const companySchema = new mongoose.Schema(
 	{
 		name: {
@@ -22,7 +24,7 @@ const companySchema = new mongoose.Schema(
 			lowercase: true,
 			validate: {
 				validator: function (v: any) {
-					return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
+					return email.test(v);
 				},
 				message: "Please enter a valid email",
 			},
@@ -41,7 +43,7 @@ const companySchema = new mongoose.Schema(
 			trim: true,
 			validate: {
 				validator: function (v: any) {
-					var re = /^\d{10}$/;
+					var re = contactNumber;
 					return v == null || re.test(v);
 				},
 				message: "Provided phone number is invalid.",

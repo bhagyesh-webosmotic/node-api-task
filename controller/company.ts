@@ -17,7 +17,10 @@ const getCompanies = (req: any, res: any) => {
 					req: req.method,
 					methodName: `getCompanies`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error}`, {
@@ -45,7 +48,10 @@ const getSingleCompany = (req: any, res: any) => {
 					req: req.method,
 					methodName: `getSingleCompany`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error}`, {
@@ -88,7 +94,10 @@ const postCompany = (req: any, res: any) => {
 					req: req.method,
 					methodName: `postCompany`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error.message}`, {
@@ -134,7 +143,10 @@ const updateCompany = (req: any, res: any) => {
 					req: req.method,
 					methodName: `updateCompany`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error.message}`, {
@@ -161,7 +173,10 @@ const deleteCompanies = (req: any, res: any) => {
 					req: req.method,
 					methodName: `deleteCompanies`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error.message}`, {
@@ -189,7 +204,10 @@ const deleteSingleCompany = (req: any, res: any) => {
 					req: req.method,
 					methodName: `deleteSingleCompany`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error.message}`, {

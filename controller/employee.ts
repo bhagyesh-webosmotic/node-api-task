@@ -17,7 +17,10 @@ const getEmployees = (req: any, res: any) => {
 					req: req.method,
 					methodName: `getEmployees`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error}`, {
@@ -45,7 +48,10 @@ const getSingleEmployee = (req: any, res: any) => {
 					req: req.method,
 					methodName: `getSingleEmployee`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error}`, {
@@ -96,7 +102,10 @@ const postEmployee = (req: any, res: any) => {
 					req: req.method,
 					methodName: `postEmployee`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error}`, {
@@ -212,7 +221,10 @@ const updateEmployee = (req: any, res: any) => {
 					req: req.method,
 					methodName: `updateEmployee`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error.message}`, {
@@ -241,7 +253,10 @@ const deleteEmployees = (req: any, res: any) => {
 						req: req.method,
 						methodName: `deleteEmployees`,
 					});
-					res.status(500).send(err);
+					res.status(500).json({
+						message: "something went wrong",
+						data: err,
+					});
 				});
 		} catch (error) {
 			logger.error(`${error.message}`, {
@@ -266,7 +281,10 @@ const deleteEmployees = (req: any, res: any) => {
 						req: req.method,
 						methodName: `deleteEmployees`,
 					});
-					res.status(500).send(err);
+					res.status(500).json({
+						message: "something went wrong",
+						data: err,
+					});
 				});
 		} catch (error) {
 			logger.error(`${error.message}`, {
@@ -295,7 +313,10 @@ const deleteSingleEmployee = (req: any, res: any) => {
 					req: req.method,
 					methodName: `deleteSingleEmployee`,
 				});
-				res.status(500).send(err);
+				res.status(500).json({
+					message: "something went wrong",
+					data: err,
+				});
 			});
 	} catch (error) {
 		logger.error(`${error.message}`, {
