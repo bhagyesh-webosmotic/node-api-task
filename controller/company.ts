@@ -4,44 +4,58 @@ import Company from "../model/company";
 import { logger } from "../logs/logger";
 
 const getCompanies = (req: any, res: any) => {
-	Company.find(function (err: any, foundCompanies: any) {
-		try {
-			if (!err) {
-				return res.status(200).send(foundCompanies);
-			} else {
-				return res.status(404).send("no data found");
-			}
-		} catch (error) {
-			logger.error(`${error.message}`, {
-				filePath: __filename.slice(__dirname.length + 1),
-				fileName: path.dirname(__filename),
-				req: req.method,
-				methodName: `getCompanies`,
+	try {
+		Company.find()
+			.then((result: any) => {
+				res.status(201).send(result);
+			})
+			.catch((err: any) => {
+				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `getCompanies`,
+				});
+				res.status(500).send(err);
 			});
-			return res.status(500).send(error.message);
-		}
-	});
+	} catch (error) {
+		logger.error(`${error}`, {
+			filePath: __filename.slice(__dirname.length + 1),
+			fileName: path.dirname(__filename),
+			req: req.method,
+			methodName: `getCompanies`,
+		});
+		return res.status(500).send(error.message);
+	}
 };
 
 const getSingleCompany = (req: any, res: any) => {
 	const companyID = req.params.companyID;
-	Company.findOne({ _id: companyID }, (err: any, foundCompany: any) => {
-		try {
-			if (!err && foundCompany) {
-				return res.status(200).send(foundCompany);
-			} else {
-				return res.status(404).send("no matching data found");
-			}
-		} catch (error) {
-			logger.error(`${error.message}`, {
-				filePath: __filename.slice(__dirname.length + 1),
-				fileName: path.dirname(__filename),
-				req: req.method,
-				methodName: `getSingleCompany`,
+	try {
+		Company.findOne({ _id: companyID })
+			.then((result: any) => {
+				res.status(201).send(result);
+			})
+			.catch((err: any) => {
+				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `getSingleCompany`,
+				});
+				res.status(500).send(err);
 			});
-			return res.status(500).send(error.message);
-		}
-	});
+	} catch (error) {
+		logger.error(`${error}`, {
+			filePath: __filename.slice(__dirname.length + 1),
+			fileName: path.dirname(__filename),
+			req: req.method,
+			methodName: `getSingleCompany`,
+		});
+		return res.status(500).send(error.message);
+	}
 };
 
 const postCompany = (req: any, res: any) => {
@@ -61,10 +75,19 @@ const postCompany = (req: any, res: any) => {
 		newCompany
 			.save()
 			.then((result: any) => {
-				res.status(201).send("success");
+				res.status(201).json({
+					message: "successfully created company",
+					data: result,
+				});
 			})
 			.catch((err: any) => {
 				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `postCompany`,
+				});
 				res.status(500).send(err);
 			});
 	} catch (error) {
@@ -85,77 +108,98 @@ const updateCompany = (req: any, res: any) => {
 	const Email = req.body.companyEmail;
 	const Address = req.body.companyAddress;
 	const ContactNumber = req.body.companyContactNumber;
-	Company.updateOne(
-		{ _id: companyID },
-		{
-			name: Name,
-			logo: Logo,
-			email: Email,
-			address: Address,
-			contactNumber: ContactNumber,
-		},
-		{ upsert: true },
-		(err: any): any => {
-			try {
-				if (!err) {
-					return res.status(202).send("successfully updated the record");
-				} else {
-					return res.status(204).send("something went wrong");
-				}
-			} catch (error) {
-				logger.error(`${error.message}`, {
+	try {
+		Company.updateOne(
+			{ _id: companyID },
+			{
+				name: Name,
+				logo: Logo,
+				email: Email,
+				address: Address,
+				contactNumber: ContactNumber,
+			},
+			{ upsert: true }
+		)
+			.then((result: any) => {
+				res.status(201).json({
+					message: "successfully updated company",
+					data: result,
+				});
+			})
+			.catch((err: any) => {
+				console.log(err);
+				logger.error(`${err}`, {
 					filePath: __filename.slice(__dirname.length + 1),
 					fileName: path.dirname(__filename),
 					req: req.method,
 					methodName: `updateCompany`,
 				});
-				return res.status(500).send(error.message);
-			}
-		}
-	);
+				res.status(500).send(err);
+			});
+	} catch (error) {
+		logger.error(`${error.message}`, {
+			filePath: __filename.slice(__dirname.length + 1),
+			fileName: path.dirname(__filename),
+			req: req.method,
+			methodName: `updateCompany`,
+		});
+		return res.status(500).send(error.message);
+	}
 };
 
 const deleteCompanies = (req: any, res: any) => {
-	Company.deleteMany((err: any) => {
-		try {
-			if (!err) {
-				return res.status(200).send("succesfully deleted all the records");
-			} else {
-				return res.status(204).send("no data found or something went wrong");
-			}
-		} catch (error) {
-			logger.error(`${error.message}`, {
-				filePath: __filename.slice(__dirname.length + 1),
-				fileName: path.dirname(__filename),
-				req: req.method,
-				methodName: `deleteCompanies`,
+	try {
+		Company.deleteMany()
+			.then((result: any) => {
+				res.status(201).send("successfully deleted all companies");
+			})
+			.catch((err: any) => {
+				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `deleteCompanies`,
+				});
+				res.status(500).send(err);
 			});
-			return res.status(500).send(error.message);
-		}
-	});
+	} catch (error) {
+		logger.error(`${error.message}`, {
+			filePath: __filename.slice(__dirname.length + 1),
+			fileName: path.dirname(__filename),
+			req: req.method,
+			methodName: `deleteCompanies`,
+		});
+		return res.status(500).send(error.message);
+	}
 };
 
 const deleteSingleCompany = (req: any, res: any) => {
 	const companyID = req.params.companyID;
-	Company.deleteOne({ _id: companyID }, (err: any) => {
-		try {
-			if (!err) {
-				return res.status(200).send("succesfully deleted the data");
-			} else {
-				return res
-					.status(204)
-					.send("no matched data found or something went wrong");
-			}
-		} catch (error) {
-			logger.error(`${error.message}`, {
-				filePath: __filename.slice(__dirname.length + 1),
-				fileName: path.dirname(__filename),
-				req: req.method,
-				methodName: `deleteSingleCompany`,
+	try {
+		Company.deleteOne({ _id: companyID })
+			.then((result: any) => {
+				res.status(201).send("successfully deleted the company");
+			})
+			.catch((err: any) => {
+				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `deleteSingleCompany`,
+				});
+				res.status(500).send(err);
 			});
-			return res.status(500).send(error.message);
-		}
-	});
+	} catch (error) {
+		logger.error(`${error.message}`, {
+			filePath: __filename.slice(__dirname.length + 1),
+			fileName: path.dirname(__filename),
+			req: req.method,
+			methodName: `deleteSingleCompany`,
+		});
+		return res.status(500).send(error.message);
+	}
 };
 
 export {

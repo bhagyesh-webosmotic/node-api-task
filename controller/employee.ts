@@ -4,44 +4,58 @@ import Employee from "../model/employee";
 import { logger } from "../logs/logger";
 
 const getEmployees = (req: any, res: any) => {
-	Employee.find((err, foundEmployees) => {
-		try {
-			if (!err) {
-				return res.status(200).send(foundEmployees);
-			} else {
-				return res.status(404).send("no data found");
-			}
-		} catch (error) {
-			logger.error(`${error.message}`, {
-				filePath: __filename.slice(__dirname.length + 1),
-				fileName: path.dirname(__filename),
-				req: req.method,
-				methodName: `getEmployees`,
+	try {
+		Employee.find()
+			.then((result: any) => {
+				res.status(201).send(result);
+			})
+			.catch((err: any) => {
+				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `getEmployees`,
+				});
+				res.status(500).send(err);
 			});
-			return res.status(500).send(error.message);
-		}
-	});
+	} catch (error) {
+		logger.error(`${error}`, {
+			filePath: __filename.slice(__dirname.length + 1),
+			fileName: path.dirname(__filename),
+			req: req.method,
+			methodName: `getEmployees`,
+		});
+		return res.status(500).send(error.message);
+	}
 };
 
 const getSingleEmployee = (req: any, res: any) => {
 	const employeeId = req.params.employeeID;
-	Employee.findOne({ _id: employeeId }, (err: any, foundEmployee: any) => {
-		try {
-			if (!err && foundEmployee) {
-				return res.status(200).send(foundEmployee);
-			} else {
-				return res.status(404).send("no matching data found");
-			}
-		} catch (error) {
-			logger.error(`${error.message}`, {
-				filePath: __filename.slice(__dirname.length + 1),
-				fileName: path.dirname(__filename),
-				req: req.method,
-				methodName: `getSingleEmployee`,
+	try {
+		Employee.findOne({ _id: employeeId })
+			.then((result: any) => {
+				res.status(201).send(result);
+			})
+			.catch((err: any) => {
+				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `getSingleEmployee`,
+				});
+				res.status(500).send(err);
 			});
-			return res.status(500).send(error.message);
-		}
-	});
+	} catch (error) {
+		logger.error(`${error}`, {
+			filePath: __filename.slice(__dirname.length + 1),
+			fileName: path.dirname(__filename),
+			req: req.method,
+			methodName: `getSingleEmployee`,
+		});
+		return res.status(500).send(error.message);
+	}
 };
 
 const postEmployee = (req: any, res: any) => {
@@ -69,14 +83,23 @@ const postEmployee = (req: any, res: any) => {
 		newEmployee
 			.save()
 			.then((result: any) => {
-				res.status(201).send("success");
+				res.status(201).json({
+					message: "successfully created employee",
+					data: result,
+				});
 			})
 			.catch((err: any) => {
 				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `postEmployee`,
+				});
 				res.status(500).send(err);
 			});
 	} catch (error) {
-		logger.error(`${error.message}`, {
+		logger.error(`${error}`, {
 			filePath: __filename.slice(__dirname.length + 1),
 			fileName: path.dirname(__filename),
 			req: req.method,
@@ -173,15 +196,24 @@ const updateEmployee = (req: any, res: any) => {
 				photo: photo,
 				companyId: companyId,
 			},
-			{},
-			(err: any, result: any) => {
-				if (result.n > 0) {
-					return res.status(202).send("successfully updated the record");
-				} else {
-					return res.status(204).send("not matched");
-				}
-			}
-		);
+			{}
+		)
+			.then((result: any) => {
+				res.status(201).json({
+					message: "successfully updated employee",
+					data: result,
+				});
+			})
+			.catch((err: any) => {
+				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `updateEmployee`,
+				});
+				res.status(500).send(err);
+			});
 	} catch (error) {
 		logger.error(`${error.message}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -196,66 +228,84 @@ const updateEmployee = (req: any, res: any) => {
 const deleteEmployees = (req: any, res: any) => {
 	const query = Object.keys(req.query).length;
 	if (query > 0) {
-		Employee.deleteMany({ _id: req.query._id }, (err) => {
-			console.log(req.query);
-			try {
-				if (!err) {
-					return res
-						.status(200)
-						.send("succesfully deleted all the selected records");
-				} else {
-					return res.status(204).send(err);
-				}
-			} catch (error) {
-				logger.error(`${error.message}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `deleteEmployees`,
-				});
-				return res.status(500).send(error.message);
-			}
-		});
-	} else {
-		Employee.deleteMany((err) => {
-			try {
-				if (!err) {
-					return res.status(200).send("succesfully deleted all the records");
-				} else {
-					return res.status(204).send(err);
-				}
-			} catch (error) {
-				logger.error(`${error.message}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `deleteEmployees`,
-				});
-				return res.status(500).send(error.message);
-			}
-		});
-	}
-};
-
-const deleteSingleEmployee = (req: any, res: any) => {
-	const employeeId = req.params.employeeID;
-	Employee.deleteOne({ _id: employeeId }, (err) => {
 		try {
-			if (!err) {
-				return res.status(200).send("succesfully deleted the data");
-			} else {
-				return res.status(204).send("no matched data");
-			}
+			Employee.deleteMany({ _id: req.query._id })
+				.then((result: any) => {
+					res.status(201).send("successfully deleted all employees");
+				})
+				.catch((err: any) => {
+					console.log(err);
+					logger.error(`${err}`, {
+						filePath: __filename.slice(__dirname.length + 1),
+						fileName: path.dirname(__filename),
+						req: req.method,
+						methodName: `deleteEmployees`,
+					});
+					res.status(500).send(err);
+				});
 		} catch (error) {
 			logger.error(`${error.message}`, {
 				filePath: __filename.slice(__dirname.length + 1),
 				fileName: path.dirname(__filename),
 				req: req.method,
-				methodName: `deleteSingleEmployee`,
+				methodName: `deleteEmployees`,
 			});
 			return res.status(500).send(error.message);
 		}
-	});
+	} else {
+		try {
+			Employee.deleteMany()
+				.then((result: any) => {
+					res.status(201).send("successfully deleted all employees");
+				})
+				.catch((err: any) => {
+					console.log(err);
+					logger.error(`${err}`, {
+						filePath: __filename.slice(__dirname.length + 1),
+						fileName: path.dirname(__filename),
+						req: req.method,
+						methodName: `deleteEmployees`,
+					});
+					res.status(500).send(err);
+				});
+		} catch (error) {
+			logger.error(`${error.message}`, {
+				filePath: __filename.slice(__dirname.length + 1),
+				fileName: path.dirname(__filename),
+				req: req.method,
+				methodName: `deleteEmployees`,
+			});
+			return res.status(500).send(error.message);
+		}
+	}
+};
+
+const deleteSingleEmployee = (req: any, res: any) => {
+	const employeeId = req.params.employeeID;
+	try {
+		Employee.deleteOne({ _id: employeeId })
+			.then((result: any) => {
+				res.status(201).send("successfully deleted the employee");
+			})
+			.catch((err: any) => {
+				console.log(err);
+				logger.error(`${err}`, {
+					filePath: __filename.slice(__dirname.length + 1),
+					fileName: path.dirname(__filename),
+					req: req.method,
+					methodName: `deleteSingleEmployee`,
+				});
+				res.status(500).send(err);
+			});
+	} catch (error) {
+		logger.error(`${error.message}`, {
+			filePath: __filename.slice(__dirname.length + 1),
+			fileName: path.dirname(__filename),
+			req: req.method,
+			methodName: `deleteSingleEmployee`,
+		});
+		return res.status(500).send(error.message);
+	}
 };
 
 export {
