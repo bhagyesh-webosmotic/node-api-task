@@ -1,0 +1,22 @@
+[{
+"_id": "60ffd7a2d26b212f4c531758",
+"firstName":"abc",
+"lastName":"xyz",
+"contactNumber": "1234567890",
+"email":"a@b.c",
+"designation":"manager",
+"salary": "100000",
+"dob": "01/01/2021",
+"companyId": "60feaff27b8ae60d9cf11fe0"
+},
+{
+"_id": "60ffd7a2d26b212f4c531759",
+"firstName":"xyz",
+"lastName":"abc",
+"contactNumber": "1234567890",
+"email":"a@b.c",
+"designation":"manager",
+"salary": "100000",
+"dob": "01/01/2021",
+"companyId": "60feaff27b8ae60d9cf11fe0"
+}]
