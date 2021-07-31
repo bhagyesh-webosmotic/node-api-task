@@ -1,27 +1,15 @@
 import path from "path";
+import bcrypt from "bcrypt";
 
 import Employee from "../model/employee";
 import { logger } from "../logs/logger";
+import { sendMail } from "../email/nodemailer";
+import { findEmployees, findOneEmployee } from "../DAO/employee";
 
-const getEmployees = (req: any, res: any) => {
+export const getEmployees = async (req: any, res: any) => {
 	try {
-		Employee.find()
-			.then((result: any) => {
-				res.status(201).send(result);
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `getEmployees`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+		const result = await findEmployees();
+		res.status(201).send(result);
 	} catch (error) {
 		logger.error(`${error}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -33,26 +21,11 @@ const getEmployees = (req: any, res: any) => {
 	}
 };
 
-const getSingleEmployee = (req: any, res: any) => {
+export const getSingleEmployee = async (req: any, res: any) => {
 	const employeeId = req.params.employeeID;
 	try {
-		Employee.findOne({ _id: employeeId })
-			.then((result: any) => {
-				res.status(201).send(result);
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `getSingleEmployee`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+		const result = await findOneEmployee({ _id: employeeId });
+		res.status(201).send(result);
 	} catch (error) {
 		logger.error(`${error}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -64,7 +37,7 @@ const getSingleEmployee = (req: any, res: any) => {
 	}
 };
 
-const postEmployee = (req: any, res: any) => {
+export const postEmployee = async (req: any, res: any) => {
 	const fName = req.body.firstName;
 	const lName = req.body.lastName;
 	const contactNumber = req.body.contactNumber;
@@ -72,41 +45,49 @@ const postEmployee = (req: any, res: any) => {
 	const designation = req.body.designation;
 	const salary = req.body.salary;
 	const dob = req.body.dob;
+	const leader = req.body.teamLeaderID;
 	const photo = req.files["employeePhoto"][0].path;
 	const companyId = req.body.companyId;
+	let managerExists = false;
 	try {
+		const result = await Employee.findOne({ designation: "manager" });
+		if (result.n > 0) {
+			managerExists = true;
+			throw new Error("cannot create multiple managers");
+		}
+
+		const random = Math.round(Math.random() * 100000);
+		const hash = await bcrypt.hash(random.toString(), 12);
+		console.log(`password:${random},hash:${hash}`);
 		const newEmployee = new Employee({
 			firstName: fName,
 			lastName: lName,
+			password: hash,
 			contactNumber: contactNumber,
 			email: email,
 			designation: designation,
 			salary: salary,
 			DOB: dob,
 			photo: photo,
+			verified: false,
+			teamLeaderID: leader,
 			companyId: companyId,
 		});
-		newEmployee
-			.save()
-			.then((result: any) => {
-				res.status(201).json({
+		if (
+			(managerExists && designation != "manager") ||
+			designation != "manager" ||
+			(!managerExists && designation == "manager")
+		) {
+			const result = await newEmployee.save();
+			if (result) {
+				return res.status(201).json({
 					message: "successfully created employee",
 					data: result,
 				});
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `postEmployee`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+			} else {
+				throw new Error("cannot create employee, please try again");
+			}
+		}
 	} catch (error) {
 		logger.error(`${error}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -118,7 +99,7 @@ const postEmployee = (req: any, res: any) => {
 	}
 };
 
-const updateMultipleEmployees = async (req: any, res: any) => {
+export const updateMultipleEmployees = async (req: any, res: any) => {
 	const rBody = req.body;
 	let exit: any = 0;
 	try {
@@ -157,17 +138,14 @@ const updateMultipleEmployees = async (req: any, res: any) => {
 				}
 			);
 		});
-		console.log("outside foreach" + exit + "");
 		if (exit == 0) {
 			return res
 				.status(202)
 				.send(`successfully updated ${rBody.length} records`);
 		} else {
-			res
-				.status(204)
-				.send(
-					`something went wrong, updated only ${rBody.length - exit} records`
-				);
+			throw new Error(
+				`something went wrong, updated only ${rBody.length - exit} records`
+			);
 		}
 	} catch (error) {
 		logger.error(`${error.message}`, {
@@ -180,7 +158,7 @@ const updateMultipleEmployees = async (req: any, res: any) => {
 	}
 };
 
-const updateEmployee = (req: any, res: any) => {
+export const updateEmployee = async (req: any, res: any) => {
 	const employeeID = req.params.employeeID;
 	const fName = req.body.firstName;
 	const lName = req.body.lastName;
@@ -192,7 +170,7 @@ const updateEmployee = (req: any, res: any) => {
 	const photo = req.files["employeePhoto"][0].path;
 	const companyId = req.body.companyId;
 	try {
-		Employee.updateOne(
+		const result = await Employee.updateOne(
 			{ _id: employeeID },
 			{
 				firstName: fName,
@@ -206,26 +184,15 @@ const updateEmployee = (req: any, res: any) => {
 				companyId: companyId,
 			},
 			{}
-		)
-			.then((result: any) => {
-				res.status(201).json({
-					message: "successfully updated employee",
-					data: result,
-				});
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `updateEmployee`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
+		);
+		if (result.n > 0) {
+			res.status(201).json({
+				message: "successfully updated employee",
+				data: result,
 			});
+		} else {
+			throw new Error("no such data found");
+		}
 	} catch (error) {
 		logger.error(`${error.message}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -237,27 +204,16 @@ const updateEmployee = (req: any, res: any) => {
 	}
 };
 
-const deleteEmployees = (req: any, res: any) => {
+export const deleteEmployees = async (req: any, res: any) => {
 	const query = Object.keys(req.query).length;
 	if (query > 0) {
 		try {
-			Employee.deleteMany({ _id: req.query._id })
-				.then((result: any) => {
-					res.status(201).send("successfully deleted all employees");
-				})
-				.catch((err: any) => {
-					console.log(err);
-					logger.error(`${err}`, {
-						filePath: __filename.slice(__dirname.length + 1),
-						fileName: path.dirname(__filename),
-						req: req.method,
-						methodName: `deleteEmployees`,
-					});
-					res.status(500).json({
-						message: "something went wrong",
-						data: err,
-					});
-				});
+			const result = await Employee.deleteMany({ _id: req.query._id });
+			if (result.n > 0) {
+				res.status(201).send("successfully deleted all employees");
+			} else {
+				throw new Error("no data found");
+			}
 		} catch (error) {
 			logger.error(`${error.message}`, {
 				filePath: __filename.slice(__dirname.length + 1),
@@ -269,23 +225,12 @@ const deleteEmployees = (req: any, res: any) => {
 		}
 	} else {
 		try {
-			Employee.deleteMany()
-				.then((result: any) => {
-					res.status(201).send("successfully deleted all employees");
-				})
-				.catch((err: any) => {
-					console.log(err);
-					logger.error(`${err}`, {
-						filePath: __filename.slice(__dirname.length + 1),
-						fileName: path.dirname(__filename),
-						req: req.method,
-						methodName: `deleteEmployees`,
-					});
-					res.status(500).json({
-						message: "something went wrong",
-						data: err,
-					});
-				});
+			const result = await Employee.deleteMany();
+			if (result.n > 0) {
+				res.status(201).send("successfully deleted all employees");
+			} else {
+				throw new Error("no data found");
+			}
 		} catch (error) {
 			logger.error(`${error.message}`, {
 				filePath: __filename.slice(__dirname.length + 1),
@@ -298,26 +243,17 @@ const deleteEmployees = (req: any, res: any) => {
 	}
 };
 
-const deleteSingleEmployee = (req: any, res: any) => {
+export const deleteSingleEmployee = async (req: any, res: any) => {
 	const employeeId = req.params.employeeID;
 	try {
-		Employee.deleteOne({ _id: employeeId })
-			.then((result: any) => {
-				res.status(201).send("successfully deleted the employee");
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `deleteSingleEmployee`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+		const result = await Employee.deleteOne({ _id: employeeId });
+		console.log(result);
+
+		if (result.n > 0) {
+			res.status(201).send("successfully deleted the employee");
+		} else {
+			throw new Error("no data found");
+		}
 	} catch (error) {
 		logger.error(`${error.message}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -327,14 +263,4 @@ const deleteSingleEmployee = (req: any, res: any) => {
 		});
 		return res.status(500).send(error.message);
 	}
-};
-
-export {
-	getEmployees,
-	getSingleEmployee,
-	postEmployee,
-	updateEmployee,
-	updateMultipleEmployees,
-	deleteEmployees,
-	deleteSingleEmployee,
 };

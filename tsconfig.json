@@ -23,7 +23,10 @@
 			"./routes",
 			"./logs",
 			"./multer",
-			"./const/"
+			"./const/",
+			"./email/",
+			"./middleware/",
+			"./DAO/"
 		],
 		// "composite": true,                           /* Enable project compilation */
 		// "tsBuildInfoFile": "./",                     /* Specify file to store incremental compilation information */

@@ -2,6 +2,7 @@ import express from "express";
 
 const Router = express.Router();
 import photo from "../multer/multer";
+import isAuth from "../middleware/is-auth";
 
 import {
 	getEmployees,
@@ -13,7 +14,7 @@ import {
 	deleteSingleEmployee,
 } from "../controller/employee";
 
-Router.get("/getEmployees", getEmployees);
+Router.get("/getEmployees", isAuth, getEmployees);
 Router.get("/getEmployees/:employeeID", getSingleEmployee);
 Router.post(
 	"/addEmployee",

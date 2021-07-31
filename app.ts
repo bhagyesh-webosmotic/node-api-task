@@ -3,9 +3,7 @@ import mongoose from "mongoose";
 import path from "path";
 
 import { logger } from "./logs/logger";
-import companyRoutes from "./routes/company";
-import employeeRoutes from "./routes/employee";
-import noRoutes from "./routes/404";
+import routes from "./routes";
 
 const app: Application = express();
 
@@ -41,9 +39,7 @@ mongoose.connect(
 	}
 );
 
-app.use("/company", companyRoutes);
-app.use("/employee", employeeRoutes);
-app.use("*", noRoutes);
+app.use(routes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, function () {

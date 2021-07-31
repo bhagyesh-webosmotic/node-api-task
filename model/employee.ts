@@ -18,6 +18,11 @@ const employeeSchema = new mongoose.Schema(
 			minlength: 1,
 			maxlength: 20,
 		},
+		password: {
+			type: String,
+			minlength: 8,
+			required: [true, "Password required"],
+		},
 		contactNumber: {
 			type: Number,
 			required: true,
@@ -79,11 +84,21 @@ const employeeSchema = new mongoose.Schema(
 			maxlength: 500,
 			required: true,
 		},
+		verified: {
+			type: Boolean,
+			required: true,
+		},
+		teamLeaderID: {
+			type: String,
+			trim: true,
+			minlength: 1,
+			maxlength: 50,
+		},
 		companyId: {
 			type: String,
 			trim: true,
 			minlength: 1,
-			maxlength: 100,
+			maxlength: 50,
 			required: true,
 		},
 	},
