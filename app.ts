@@ -2,7 +2,7 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import path from "path";
 
-import { logger } from "./logs/logger";
+import { logger } from "./logger/logger";
 import routes from "./routes";
 
 const app: Application = express();

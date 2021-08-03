@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { validationResult } from "express-validator";
 
 import Employee from "../model/employee";
-import { logger } from "../logs/logger";
+import { logger } from "../logger/logger";
 import { sendMail } from "../email/nodemailer";
 import {
 	findEmployees,

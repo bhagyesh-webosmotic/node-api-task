@@ -2,7 +2,7 @@ import path from "path";
 import { validationResult } from "express-validator";
 
 import Company from "../model/company";
-import { logger } from "../logs/logger";
+import { logger } from "../logger/logger";
 import {
 	findCompanies,
 	findOneCompany,

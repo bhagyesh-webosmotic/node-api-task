@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
 
-import { logger } from "../logs/logger";
+import { logger } from "../logger/logger";
 import { findOneEmployee } from "../DAO/employee";
 
 export const login = async (req: Request, res: Response) => {
