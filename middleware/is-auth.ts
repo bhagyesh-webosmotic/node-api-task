@@ -1,11 +1,11 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { Response, NextFunction } from "express";
 
 export = (req: any, res: Response, next: NextFunction) => {
 	const token: string = req.get("Authorization");
 	let decodedToken;
 	try {
-		decodedToken = jwt.verify(token, "abcdefg");
+		decodedToken = jwt.verify(token, "abcdefg") as JwtPayload;
 	} catch (error) {
 		throw error;
 	}
@@ -13,6 +13,7 @@ export = (req: any, res: Response, next: NextFunction) => {
 		const error = new Error("not authenticated");
 		throw error;
 	}
-	req.token = decodedToken;
+	req.id = decodedToken.id;
+	req.email = decodedToken.email;
 	next();
 };

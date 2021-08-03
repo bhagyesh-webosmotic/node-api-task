@@ -1,1 +1,5 @@
-export const designation = ["developer", "leader", "manager"];
+export enum designation {
+	"developer",
+	"leader",
+	"manager",
+}

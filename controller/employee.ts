@@ -1,15 +1,37 @@
 import path from "path";
 import bcrypt from "bcrypt";
+import { validationResult } from "express-validator";
 
 import Employee from "../model/employee";
 import { logger } from "../logs/logger";
 import { sendMail } from "../email/nodemailer";
-import { findEmployees, findOneEmployee } from "../DAO/employee";
+import {
+	findEmployees,
+	findOneEmployee,
+	updateOneEmployee,
+	deleteManyEmployees,
+	deleteOneEmployee,
+} from "../DAO/employee";
+import { PostEmployeeValidation } from "../middleware/req-body-validation";
 
 export const getEmployees = async (req: any, res: any) => {
 	try {
-		const result = await findEmployees();
-		res.status(201).send(result);
+		const checkIfManager = await findOneEmployee({
+			_id: req.id,
+		});
+		if (checkIfManager.designation === "manager") {
+			const result = await findEmployees();
+			return res.status(201).send(result);
+		} else if (checkIfManager.designation === "leader") {
+			const result = await findEmployees({ teamLeaderID: req.id });
+			if (!result) {
+				throw new Error("no data found");
+			}
+			return res.status(201).send(result);
+		} else {
+			const result = await findOneEmployee({ _id: req.id });
+			return res.status(201).send(result);
+		}
 	} catch (error) {
 		logger.error(`${error}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -22,10 +44,31 @@ export const getEmployees = async (req: any, res: any) => {
 };
 
 export const getSingleEmployee = async (req: any, res: any) => {
-	const employeeId = req.params.employeeID;
+	const employeeId = req.params.employeeId;
 	try {
-		const result = await findOneEmployee({ _id: employeeId });
-		res.status(201).send(result);
+		const checkIfManager = await findOneEmployee({
+			_id: req.id,
+		});
+
+		if (checkIfManager.designation === "manager") {
+			const result = await findOneEmployee({ _id: employeeId });
+			return res.status(201).send(result);
+		} else if (checkIfManager.designation === "leader") {
+			const result = await findOneEmployee({
+				_id: employeeId,
+				teamLeaderID: req.id,
+			});
+			if (!result) {
+				throw new Error("no data found");
+			}
+			return res.status(201).send(result);
+		} else {
+			if (req.id != employeeId) {
+				throw new Error("you are not allowed to access this data");
+			}
+			const result = await findOneEmployee({ _id: req.id });
+			return res.status(201).send(result);
+		}
 	} catch (error) {
 		logger.error(`${error}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -38,20 +81,19 @@ export const getSingleEmployee = async (req: any, res: any) => {
 };
 
 export const postEmployee = async (req: any, res: any) => {
-	const fName = req.body.firstName;
-	const lName = req.body.lastName;
-	const contactNumber = req.body.contactNumber;
-	const email = req.body.email;
-	const designation = req.body.designation;
-	const salary = req.body.salary;
-	const dob = req.body.dob;
-	const leader = req.body.teamLeaderID;
-	const photo = req.files["employeePhoto"][0].path;
-	const companyId = req.body.companyId;
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(422).json({
+			message: "validation failed entered data is incorrect",
+			errors: errors.array(),
+		});
+	}
+
 	let managerExists = false;
+
 	try {
-		const result = await Employee.findOne({ designation: "manager" });
-		if (result.n > 0) {
+		const result = await findOneEmployee({ designation: "manager" });
+		if (result && req.body.designation == "manager") {
 			managerExists = true;
 			throw new Error("cannot create multiple managers");
 		}
@@ -59,27 +101,40 @@ export const postEmployee = async (req: any, res: any) => {
 		const random = Math.round(Math.random() * 100000);
 		const hash = await bcrypt.hash(random.toString(), 12);
 		console.log(`password:${random},hash:${hash}`);
-		const newEmployee = new Employee({
-			firstName: fName,
-			lastName: lName,
-			password: hash,
-			contactNumber: contactNumber,
-			email: email,
-			designation: designation,
-			salary: salary,
-			DOB: dob,
-			photo: photo,
-			verified: false,
-			teamLeaderID: leader,
-			companyId: companyId,
-		});
+
+		const reqBody = new PostEmployeeValidation();
+		reqBody.firstName = req.body.firstName;
+		reqBody.lastName = req.body.lastName;
+		reqBody.password = hash;
+		reqBody.contactNumber = req.body.contactNumber;
+		reqBody.email = req.body.email;
+		reqBody.designation = req.body.designation;
+		reqBody.salary = req.body.salary;
+		reqBody.DOB = req.body.dob;
+		reqBody.photo = req.files["employeePhoto"][0].path;
+		reqBody.verified = false;
+		reqBody.teamLeaderID = req.body.teamLeaderID;
+		reqBody.companyId = req.body.companyId;
+		const newEmployee = new Employee(reqBody);
+
 		if (
-			(managerExists && designation != "manager") ||
-			designation != "manager" ||
-			(!managerExists && designation == "manager")
+			(managerExists && reqBody.designation != "manager") ||
+			reqBody.designation != "manager" ||
+			(!managerExists && reqBody.designation == "manager")
 		) {
 			const result = await newEmployee.save();
 			if (result) {
+				sendMail(
+					reqBody.email,
+					"verify account",
+					random,
+					(err: any, data: any) => {
+						if (err) {
+							console.log(err);
+							throw new Error(err);
+						}
+					}
+				);
 				return res.status(201).json({
 					message: "successfully created employee",
 					data: result,
@@ -100,32 +155,14 @@ export const postEmployee = async (req: any, res: any) => {
 };
 
 export const updateMultipleEmployees = async (req: any, res: any) => {
-	const rBody = req.body;
+	const rBodyArr = req.body;
 	let exit: any = 0;
 	try {
-		const dataLoop = await rBody.forEach((data: any) => {
-			const bid = data._id;
-			const fName = data.firstName;
-			const lName = data.lastName;
-			const contactNumber = data.contactNumber;
-			const email = data.email;
-			const designation = data.designation;
-			const salary = data.salary;
-			const dob = data.dob;
-			const companyId = data.companyId;
-			Employee.updateOne(
-				{ _id: bid },
+		const dataLoop = await rBodyArr.forEach((data: any) => {
+			updateOneEmployee(
+				{ _id: data._id },
 				{
-					$set: {
-						firstName: fName,
-						lastName: lName,
-						contactNumber: contactNumber,
-						email: email,
-						designation: designation,
-						salary: salary,
-						DOB: dob,
-						companyId: companyId,
-					},
+					$set: data,
 				},
 				{},
 				(err: any, res: any) => {
@@ -141,10 +178,10 @@ export const updateMultipleEmployees = async (req: any, res: any) => {
 		if (exit == 0) {
 			return res
 				.status(202)
-				.send(`successfully updated ${rBody.length} records`);
+				.send(`successfully updated ${rBodyArr.length} records`);
 		} else {
 			throw new Error(
-				`something went wrong, updated only ${rBody.length - exit} records`
+				`something went wrong, updated only ${rBodyArr.length - exit} records`
 			);
 		}
 	} catch (error) {
@@ -159,37 +196,27 @@ export const updateMultipleEmployees = async (req: any, res: any) => {
 };
 
 export const updateEmployee = async (req: any, res: any) => {
-	const employeeID = req.params.employeeID;
-	const fName = req.body.firstName;
-	const lName = req.body.lastName;
-	const contactNumber = req.body.contactNumber;
-	const email = req.body.email;
-	const designation = req.body.designation;
-	const salary = req.body.salary;
-	const dob = req.body.dob;
-	const photo = req.files["employeePhoto"][0].path;
-	const companyId = req.body.companyId;
+	const employeeId = req.params.employeeId;
+
+	const password = req.body.password;
+
+	if (password) {
+		const hash = await bcrypt.hash(password, 12);
+		req.body.password = hash;
+	}
+
+	const reqBody = req.body;
+
 	try {
-		const result = await Employee.updateOne(
-			{ _id: employeeID },
-			{
-				firstName: fName,
-				lastName: lName,
-				contactNumber: contactNumber,
-				email: email,
-				designation: designation,
-				salary: salary,
-				DOB: dob,
-				photo: photo,
-				companyId: companyId,
-			},
+		const result = await updateOneEmployee(
+			{ _id: employeeId },
+			{ $set: reqBody },
 			{}
 		);
+		console.log(result);
+
 		if (result.n > 0) {
-			res.status(201).json({
-				message: "successfully updated employee",
-				data: result,
-			});
+			res.status(201).send("successfully updated employee");
 		} else {
 			throw new Error("no such data found");
 		}
@@ -208,7 +235,7 @@ export const deleteEmployees = async (req: any, res: any) => {
 	const query = Object.keys(req.query).length;
 	if (query > 0) {
 		try {
-			const result = await Employee.deleteMany({ _id: req.query._id });
+			const result = await deleteManyEmployees({ _id: req.query._id });
 			if (result.n > 0) {
 				res.status(201).send("successfully deleted all employees");
 			} else {
@@ -225,7 +252,7 @@ export const deleteEmployees = async (req: any, res: any) => {
 		}
 	} else {
 		try {
-			const result = await Employee.deleteMany();
+			const result = await deleteManyEmployees();
 			if (result.n > 0) {
 				res.status(201).send("successfully deleted all employees");
 			} else {
@@ -244,9 +271,9 @@ export const deleteEmployees = async (req: any, res: any) => {
 };
 
 export const deleteSingleEmployee = async (req: any, res: any) => {
-	const employeeId = req.params.employeeID;
+	const employeeId = req.params.employeeId;
 	try {
-		const result = await Employee.deleteOne({ _id: employeeId });
+		const result = await deleteOneEmployee({ _id: employeeId });
 		console.log(result);
 
 		if (result.n > 0) {

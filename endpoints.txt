@@ -1,11 +1,11 @@
 employee
-POST - single create
-GET - single read                                   [params]
-GET - multiple(All) read
-PUT - single update                                 [params]
-PUT - multiple (by Query string & body) update
-DELETE - single delete
-DELETE - multiple(by Query string || All) delete    
+POST - single create                                            [header]
+GET - single read                                   [params]    [header]
+GET - multiple(All) read                                        [header]
+PUT - single update                                 [params]    [header]
+PUT - multiple (by Query string & body) update                  [header]
+DELETE - single delete                                          [header]
+DELETE - multiple(by Query string || All) delete                [header]
 
 
 company

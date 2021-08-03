@@ -3,16 +3,21 @@ import { Request, Response } from "express";
 import path from "path";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { validationResult } from "express-validator";
 
-import Employee from "../model/employee";
 import { logger } from "../logs/logger";
+import { findOneEmployee } from "../DAO/employee";
 
 export const login = async (req: Request, res: Response) => {
 	try {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			throw new Error("validation failed");
+		}
 		const email = req.body.email;
 		const password = req.body.password;
 		let loadedUser;
-		const user = await Employee.findOne({ email: email });
+		const user = await findOneEmployee({ email: email });
 		loadedUser = user;
 		const validPassword = await bcrypt.compare(password, user.password);
 		if (validPassword) {

@@ -1,12 +1,21 @@
 import path from "path";
+import { validationResult } from "express-validator";
 
 import Company from "../model/company";
 import { logger } from "../logs/logger";
+import {
+	findCompanies,
+	findOneCompany,
+	updateOneCompany,
+	deleteManyCompanies,
+	deleteOneCompany,
+} from "../DAO/company";
+import { PostCompanyValidation } from "../middleware/req-body-validation";
 
 export const getCompanies = async (req: any, res: any) => {
 	try {
-		const result = await Company.find();
-		if (result.n > 0) {
+		const result = await findCompanies();
+		if (result) {
 			res.status(201).send(result);
 		} else {
 			throw new Error("something went wrong, can not get employees");
@@ -23,10 +32,10 @@ export const getCompanies = async (req: any, res: any) => {
 };
 
 export const getSingleCompany = async (req: any, res: any) => {
-	const companyID = req.params.companyID;
+	const companyId = req.params.companyId;
 	try {
-		const result = await Company.findOne({ _id: companyID });
-		if (result.n > 0) {
+		const result = await findOneCompany({ _id: companyId });
+		if (result) {
 			res.status(201).send(result);
 		} else {
 			throw new Error("something went wrong, can not get employees");
@@ -43,21 +52,25 @@ export const getSingleCompany = async (req: any, res: any) => {
 };
 
 export const postCompany = async (req: any, res: any) => {
-	const Name = req.body.companyName;
-	const Logo = req.files["companyLogo"][0].path;
-	const Email = req.body.companyEmail;
-	const Address = req.body.companyAddress;
-	const ContactNumber = req.body.companyContactNumber;
-	try {
-		const newCompany = new Company({
-			name: Name,
-			logo: Logo,
-			email: Email,
-			address: Address,
-			contactNumber: ContactNumber,
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(422).json({
+			message: "validation failed entered data is incorrect",
+			errors: errors.array(),
 		});
+	}
+
+	try {
+		const reqBody = new PostCompanyValidation();
+		reqBody.name = req.body.companyName;
+		reqBody.logo = req.files["companyLogo"][0].path;
+		reqBody.email = req.body.companyEmail;
+		reqBody.address = req.body.companyAddress;
+		reqBody.contactNumber = req.body.companyContactNumber;
+		const newCompany = new Company(reqBody);
+
 		const result = await newCompany.save();
-		if (result.n > 0) {
+		if (result) {
 			res.status(201).json({
 				message: "successfully created company",
 				data: result,
@@ -77,29 +90,18 @@ export const postCompany = async (req: any, res: any) => {
 };
 
 export const updateCompany = async (req: any, res: any) => {
-	const companyID = req.params.companyID;
-	const Name = req.body.companyName;
-	const Logo = req.files["companyLogo"][0].path;
-	const Email = req.body.companyEmail;
-	const Address = req.body.companyAddress;
-	const ContactNumber = req.body.companyContactNumber;
+	const companyId = req.params.companyId;
+	const reqBody = req.body;
 	try {
-		const result = await Company.updateOne(
-			{ _id: companyID },
+		const result = await updateOneCompany(
+			{ _id: companyId },
 			{
-				name: Name,
-				logo: Logo,
-				email: Email,
-				address: Address,
-				contactNumber: ContactNumber,
+				$set: reqBody,
 			},
 			{ upsert: true }
 		);
-		if (result.n > 0) {
-			res.status(201).json({
-				message: "successfully updated company",
-				data: result,
-			});
+		if (result) {
+			res.status(201).send("successfully updated company");
 		} else {
 			throw new Error("something went wrong, could not update the company");
 		}
@@ -116,8 +118,8 @@ export const updateCompany = async (req: any, res: any) => {
 
 export const deleteCompanies = async (req: any, res: any) => {
 	try {
-		const result = await Company.deleteMany();
-		if (result.n > 0) {
+		const result = await deleteManyCompanies();
+		if (result) {
 			res.status(201).send("successfully deleted all companies");
 		} else {
 			throw new Error("could not delete the company");
@@ -134,11 +136,11 @@ export const deleteCompanies = async (req: any, res: any) => {
 };
 
 export const deleteSingleCompany = async (req: any, res: any) => {
-	const companyID = req.params.companyID;
+	const companyId = req.params.companyId;
 	try {
-		const result = await Company.deleteOne({ _id: companyID });
-		if (result.n > 0) {
-			res.status(201).send("successfully deleted all companies");
+		const result = await deleteOneCompany({ _id: companyId });
+		if (result) {
+			res.status(201).send("successfully deleted company");
 		} else {
 			throw new Error("could not delete the company");
 		}

@@ -89,17 +89,12 @@ const employeeSchema = new mongoose.Schema(
 			required: true,
 		},
 		teamLeaderID: {
-			type: String,
-			trim: true,
-			minlength: 1,
-			maxlength: 50,
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Employee",
 		},
 		companyId: {
-			type: String,
-			trim: true,
-			minlength: 1,
-			maxlength: 50,
-			required: true,
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Company",
 		},
 	},
 	{ timestamps: true }
