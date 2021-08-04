@@ -9,7 +9,7 @@ Router.post(
 	"/login",
 	[
 		body("password").trim().isLength({ min: 4 }).not().isEmpty(),
-		body("email")
+		body("email") //TODO handle if email exists in DB on server route, so it simple trows error and does not get pass to auth controller
 			.isEmail()
 			.withMessage("Please enter a valid email")
 			.normalizeEmail()

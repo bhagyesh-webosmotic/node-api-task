@@ -20,7 +20,6 @@ const employeeSchema = new mongoose.Schema(
 		},
 		password: {
 			type: String,
-			minlength: 8,
 			required: [true, "Password required"],
 		},
 		contactNumber: {
@@ -28,7 +27,7 @@ const employeeSchema = new mongoose.Schema(
 			required: true,
 			trim: true,
 			validate: {
-				validator: function (v: any) {
+				validator: function (v: string) {
 					var re = contactNumber;
 					return v == null || re.test(v);
 				},
@@ -41,7 +40,7 @@ const employeeSchema = new mongoose.Schema(
 			trim: true,
 			lowercase: true,
 			validate: {
-				validator: function (v: any) {
+				validator: function (v: string) {
 					return email.test(v);
 				},
 				message: "Please enter a valid email",
@@ -70,7 +69,7 @@ const employeeSchema = new mongoose.Schema(
 			minlength: 1,
 			maxlength: 100,
 			validate: {
-				validator: function (v: any) {
+				validator: function (v: string) {
 					return DOB.test(v);
 				},
 				message: `not a valid date`,

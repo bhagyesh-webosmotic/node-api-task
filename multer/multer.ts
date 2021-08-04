@@ -1,9 +1,9 @@
-import multer from "multer";
+import multer, { FileFilterCallback } from "multer";
 
 export default multer({
 	storage: multer.diskStorage({}),
 	limits: { fileSize: 1048576 },
-	fileFilter: (req, file, cb: any) => {
+	fileFilter: (req, file, cb: FileFilterCallback | any) => {
 		if (!file.mimetype.match(/jpe|jpeg|png/)) {
 			cb(new Error("File is not supported"), false);
 			return;
@@ -15,7 +15,7 @@ export default multer({
 export const logo = multer({
 	storage: multer.diskStorage({}),
 	limits: { fileSize: 1048576 },
-	fileFilter: (req, file, cb: any) => {
+	fileFilter: (req, file, cb: FileFilterCallback | any) => {
 		if (!file.mimetype.match(/png/)) {
 			cb(new Error("File is not supported"), false);
 			return;

@@ -1,11 +1,12 @@
+require("dotenv").config();
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 
-export = (req: any, res: Response, next: NextFunction) => {
+export = (req: Request | any, res: Response, next: NextFunction) => {
 	const token: string = req.get("Authorization");
 	let decodedToken;
 	try {
-		decodedToken = jwt.verify(token, "abcdefg") as JwtPayload;
+		decodedToken = jwt.verify(token, `${process.env.JWTSECRET}`) as JwtPayload;
 	} catch (error) {
 		throw error;
 	}

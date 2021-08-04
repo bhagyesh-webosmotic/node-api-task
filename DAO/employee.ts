@@ -1,40 +1,43 @@
-import { CallbackError } from "mongoose";
+import { PostEmployeeValidation } from "../middleware/req-body-validation";
 import Employee from "../model/employee";
 
 export const findEmployees = (
-	filterObj?: any,
-	projectionObj?: any,
-	optionsObj?: any,
-	callback?: (err: CallbackError, res: any) => void
-) => {
-	return Employee.find(filterObj, projectionObj, optionsObj, callback);
+	filterObj: Record<string, any>
+): Promise<PostEmployeeValidation> => {
+	return Employee.find(filterObj);
 };
 
-export const findOneEmployee = (obj: any) => {
+export const findOneEmployee = (
+	obj: Record<string, any>
+): Promise<PostEmployeeValidation> => {
 	return Employee.findOne(obj);
 };
 
 export const updateOneEmployee = (
-	filterObj?: any,
-	UpdateObj?: any,
-	optionsObj?: any,
-	callback?: (err: CallbackError, res: any) => void
-) => {
-	return Employee.updateOne(filterObj, UpdateObj, optionsObj, callback);
+	filterObj?: Record<string, any>,
+	UpdateObj?: Record<string, any>
+): Promise<PostEmployeeValidation> => {
+	return Employee.updateOne(filterObj, UpdateObj, { upsert: true });
+};
+
+export const updateOneEmployeeById = (
+	filterObj?: Record<string, any>,
+	UpdateObj?: Record<string, any>
+): Promise<PostEmployeeValidation> => {
+	return Employee.findByIdAndUpdate(filterObj, UpdateObj, {
+		useFindAndModify: false,
+		new: true,
+	});
 };
 
 export const deleteManyEmployees = (
-	filterObj?: any,
-	optionsObj?: any,
-	callback?: (err: CallbackError) => void
-) => {
-	return Employee.deleteMany(filterObj, optionsObj, callback);
+	filterObj?: Record<string, any>
+): Promise<PostEmployeeValidation> => {
+	return Employee.deleteMany(filterObj);
 };
 
 export const deleteOneEmployee = (
-	filterObj?: any,
-	optionsObj?: any,
-	callback?: (err: CallbackError) => void
-) => {
-	return Employee.deleteOne(filterObj, optionsObj, callback);
+	filterObj?: Record<string, any>
+): Promise<PostEmployeeValidation> => {
+	return Employee.deleteOne(filterObj);
 };

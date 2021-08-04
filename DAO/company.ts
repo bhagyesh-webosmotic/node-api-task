@@ -1,35 +1,33 @@
-import { CallbackError } from "mongoose";
+import { PostCompanyValidation } from "../middleware/req-body-validation";
 import Company from "../model/company";
 
-export const findCompanies = () => {
-	return Company.find();
+export const findCompanies = (
+	obj: Record<string, any>
+): Promise<PostCompanyValidation> => {
+	return Company.find(obj);
 };
 
-export const findOneCompany = (obj: any) => {
+export const findOneCompany = (
+	obj: Record<string, any>
+): Promise<PostCompanyValidation> => {
 	return Company.findOne(obj);
 };
 
 export const updateOneCompany = (
-	filterObj?: any,
-	UpdateObj?: any,
-	optionsObj?: any,
-	callback?: (err: CallbackError, res: any) => void
-) => {
-	return Company.updateOne(filterObj, UpdateObj, optionsObj, callback);
+	filterObj?: Record<string, any>,
+	UpdateObj?: Record<string, any>
+): Promise<PostCompanyValidation> => {
+	return Company.updateOne(filterObj, UpdateObj, { upsert: true });
 };
 
 export const deleteManyCompanies = (
-	filterObj?: any,
-	optionsObj?: any,
-	callback?: (err: CallbackError) => void
-) => {
-	return Company.deleteMany(filterObj, optionsObj, callback);
+	filterObj?: Record<string, any>
+): Promise<PostCompanyValidation> => {
+	return Company.deleteMany(filterObj);
 };
 
 export const deleteOneCompany = (
-	filterObj?: any,
-	optionsObj?: any,
-	callback?: (err: CallbackError) => void
-) => {
-	return Company.deleteOne(filterObj, optionsObj, callback);
+	filterObj?: Record<string, any>
+): Promise<PostCompanyValidation> => {
+	return Company.deleteOne(filterObj);
 };

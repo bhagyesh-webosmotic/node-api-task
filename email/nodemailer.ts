@@ -10,20 +10,12 @@ const transporter = nodemailer.createTransport({
 	},
 });
 
-export const sendMail = (email: any, subject: any, text: any, cb: any) => {
+export const sendMail = (email: string, subject: string, text: string) => {
 	const mailoptions = {
 		from: "bhagyesh.webosmotic@gmail.com",
 		to: email,
 		subject: subject,
 		html: emailTemplate(text),
 	};
-	transporter
-		.sendMail(mailoptions)
-		.then((response) => {
-			cb(null, response);
-		})
-		.catch((error) => {
-			cb(error, null);
-			console.log("Error:", error);
-		});
+	return transporter.sendMail(mailoptions);
 };

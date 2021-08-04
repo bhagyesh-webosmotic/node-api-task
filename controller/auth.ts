@@ -16,27 +16,24 @@ export const login = async (req: Request, res: Response) => {
 		}
 		const email = req.body.email;
 		const password = req.body.password;
-		let loadedUser;
 		const user = await findOneEmployee({ email: email });
-		loadedUser = user;
-		const validPassword = await bcrypt.compare(password, user.password);
-		if (validPassword) {
-			const token = jwt.sign(
-				{
-					email: loadedUser.email,
-					id: loadedUser._id.toString(),
-				},
-				"abcdefg",
-				{ expiresIn: "1h" }
-			);
-			res.status(202).json({
-				token: token,
-				message: "welcome",
-				data: user,
-			});
-		} else {
-			return res.status(500).send("try again");
+		const validPassword = await bcrypt.compare(password, `${user.password}`);
+		if (!validPassword) {
+			return res.status(401).send("try again");
 		}
+		const token = jwt.sign(
+			{
+				email: user.email,
+				id: user._id.toString(),
+			},
+			`${process.env.JWTSECRET}`,
+			{ expiresIn: "1h" }
+		);
+		res.status(202).json({
+			token: token,
+			message: "welcome",
+			data: user,
+		});
 	} catch (error) {
 		logger.error(`${error}`, {
 			filePath: __filename.slice(__dirname.length + 1),

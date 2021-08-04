@@ -1,22 +1,24 @@
 export class PostEmployeeValidation {
-	firstName!: String;
-	lastName!: String;
-	password!: String;
-	contactNumber!: Number;
-	email!: String;
-	designation!: String;
-	salary!: Number;
-	DOB!: String;
-	photo!: String;
+	_id!: string;
+	firstName!: string;
+	lastName!: string;
+	password!: string;
+	contactNumber!: number;
+	email!: string;
+	designation!: string;
+	salary!: number;
+	DOB!: string;
+	photo!: string;
 	verified!: boolean;
-	teamLeaderID!: String;
-	companyId!: String;
+	teamLeaderID!: string;
+	companyId!: string;
 }
 
 export class PostCompanyValidation {
-	name!: String;
-	logo!: String;
-	email!: String;
-	address!: String;
-	contactNumber!: Number;
+	_id!: string;
+	name!: string;
+	logo!: string;
+	email!: string;
+	address!: string;
+	contactNumber!: number;
 }

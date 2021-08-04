@@ -17,8 +17,8 @@ import {
 	deleteSingleEmployee,
 } from "../controller/employee";
 
-Router.get("/getEmployees", isAuth, getEmployees);
-Router.get("/getEmployees/:employeeId", isAuth, getSingleEmployee);
+Router.get("/employees", isAuth, getEmployees);
+Router.get("/employees/:employeeId", isAuth, getSingleEmployee);
 Router.post(
 	"/addEmployee",
 	photo.fields([{ name: "employeePhoto", maxCount: 1 }]),

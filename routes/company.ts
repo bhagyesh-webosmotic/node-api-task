@@ -14,8 +14,8 @@ import {
 	deleteSingleCompany,
 } from "../controller/company";
 
-Router.get("/getCompanies", getCompanies);
-Router.get("/getCompanies/:companyId", getSingleCompany);
+Router.get("/companies", getCompanies);
+Router.get("/companies/:companyId", getSingleCompany);
 Router.post(
 	"/addCompany",
 	logo.fields([{ name: "companyLogo", maxCount: 1 }]),

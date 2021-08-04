@@ -23,7 +23,7 @@ const companySchema = new mongoose.Schema(
 			trim: true,
 			lowercase: true,
 			validate: {
-				validator: function (v: any) {
+				validator: function (v: string) {
 					return email.test(v);
 				},
 				message: "Please enter a valid email",
@@ -42,7 +42,7 @@ const companySchema = new mongoose.Schema(
 			required: true,
 			trim: true,
 			validate: {
-				validator: function (v: any) {
+				validator: function (v: string) {
 					var re = contactNumber;
 					return v == null || re.test(v);
 				},

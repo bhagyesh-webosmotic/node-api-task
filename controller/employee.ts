@@ -1,6 +1,7 @@
 import path from "path";
 import bcrypt from "bcrypt";
 import { validationResult } from "express-validator";
+import { Request, Response } from "express";
 
 import Employee from "../model/employee";
 import { logger } from "../logger/logger";
@@ -8,24 +9,24 @@ import { sendMail } from "../email/nodemailer";
 import {
 	findEmployees,
 	findOneEmployee,
-	updateOneEmployee,
+	updateOneEmployeeById,
 	deleteManyEmployees,
 	deleteOneEmployee,
 } from "../DAO/employee";
 import { PostEmployeeValidation } from "../middleware/req-body-validation";
 
-export const getEmployees = async (req: any, res: any) => {
+export const getEmployees = async (req: Request | any, res: Response) => {
 	try {
 		const checkIfManager = await findOneEmployee({
 			_id: req.id,
 		});
 		if (checkIfManager.designation === "manager") {
-			const result = await findEmployees();
+			const result = await findEmployees({});
 			return res.status(201).send(result);
 		} else if (checkIfManager.designation === "leader") {
 			const result = await findEmployees({ teamLeaderID: req.id });
 			if (!result) {
-				throw new Error("no data found");
+				return res.status(404).send("no data found");
 			}
 			return res.status(201).send(result);
 		} else {
@@ -43,7 +44,7 @@ export const getEmployees = async (req: any, res: any) => {
 	}
 };
 
-export const getSingleEmployee = async (req: any, res: any) => {
+export const getSingleEmployee = async (req: Request | any, res: Response) => {
 	const employeeId = req.params.employeeId;
 	try {
 		const checkIfManager = await findOneEmployee({
@@ -59,12 +60,12 @@ export const getSingleEmployee = async (req: any, res: any) => {
 				teamLeaderID: req.id,
 			});
 			if (!result) {
-				throw new Error("no data found");
+				return res.status(404).send("no data found");
 			}
 			return res.status(201).send(result);
 		} else {
 			if (req.id != employeeId) {
-				throw new Error("you are not allowed to access this data");
+				return res.status(401).send("you are not allowed to access this data");
 			}
 			const result = await findOneEmployee({ _id: req.id });
 			return res.status(201).send(result);
@@ -80,7 +81,7 @@ export const getSingleEmployee = async (req: any, res: any) => {
 	}
 };
 
-export const postEmployee = async (req: any, res: any) => {
+export const postEmployee = async (req: Request | any, res: Response) => {
 	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
 		return res.status(422).json({
@@ -95,7 +96,7 @@ export const postEmployee = async (req: any, res: any) => {
 		const result = await findOneEmployee({ designation: "manager" });
 		if (result && req.body.designation == "manager") {
 			managerExists = true;
-			throw new Error("cannot create multiple managers");
+			return res.status(405).send("cannot create multiple managers");
 		}
 
 		const random = Math.round(Math.random() * 100000);
@@ -122,26 +123,22 @@ export const postEmployee = async (req: any, res: any) => {
 			reqBody.designation != "manager" ||
 			(!managerExists && reqBody.designation == "manager")
 		) {
-			const result = await newEmployee.save();
-			if (result) {
-				sendMail(
-					reqBody.email,
-					"verify account",
-					random,
-					(err: any, data: any) => {
-						if (err) {
-							console.log(err);
-							throw new Error(err);
-						}
-					}
-				);
-				return res.status(201).json({
-					message: "successfully created employee",
-					data: result,
-				});
-			} else {
-				throw new Error("cannot create employee, please try again");
+			const isMailSent = await sendMail(
+				reqBody.email,
+				"verify account",
+				`${random}`
+			);
+			if (!isMailSent) {
+				return res.status(500).send("cannot create employee, please try again");
 			}
+			const result = await newEmployee.save();
+			if (!result) {
+				return res.status(500).send("cannot create employee, please try again");
+			}
+			return res.status(201).json({
+				message: "successfully created employee",
+				data: result,
+			});
 		}
 	} catch (error) {
 		logger.error(`${error}`, {
@@ -154,35 +151,31 @@ export const postEmployee = async (req: any, res: any) => {
 	}
 };
 
-export const updateMultipleEmployees = async (req: any, res: any) => {
-	const rBodyArr = req.body;
-	let exit: any = 0;
+export const updateMultipleEmployees = async (req: Request, res: Response) => {
 	try {
-		const dataLoop = await rBodyArr.forEach((data: any) => {
-			updateOneEmployee(
-				{ _id: data._id },
+		const rBodyArr = req.body;
+		let exit: number = 0;
+		for (const iterator of rBodyArr) {
+			const result = await updateOneEmployeeById(
+				{ _id: iterator._id },
 				{
-					$set: data,
-				},
-				{},
-				(err: any, res: any) => {
-					if (!err) {
-						return;
-					} else {
-						exit += 1;
-						return;
-					}
+					$set: iterator,
 				}
 			);
-		});
+			if (result == null) {
+				exit += 1;
+			}
+		}
 		if (exit == 0) {
 			return res
 				.status(202)
 				.send(`successfully updated ${rBodyArr.length} records`);
 		} else {
-			throw new Error(
-				`something went wrong, updated only ${rBodyArr.length - exit} records`
-			);
+			return res
+				.status(406)
+				.send(
+					`something went wrong, updated only ${rBodyArr.length - exit} records`
+				);
 		}
 	} catch (error) {
 		logger.error(`${error.message}`, {
@@ -195,31 +188,24 @@ export const updateMultipleEmployees = async (req: any, res: any) => {
 	}
 };
 
-export const updateEmployee = async (req: any, res: any) => {
+export const updateEmployee = async (req: Request, res: Response) => {
 	const employeeId = req.params.employeeId;
-
 	const password = req.body.password;
-
 	if (password) {
 		const hash = await bcrypt.hash(password, 12);
 		req.body.password = hash;
 	}
-
 	const reqBody = req.body;
-
 	try {
-		const result = await updateOneEmployee(
+		const result = await updateOneEmployeeById(
 			{ _id: employeeId },
-			{ $set: reqBody },
-			{}
+			{ $set: reqBody }
 		);
 		console.log(result);
-
-		if (result.n > 0) {
-			res.status(201).send("successfully updated employee");
-		} else {
-			throw new Error("no such data found");
+		if (!result) {
+			return res.status(404).send("no such data found to update");
 		}
+		res.status(201).send("successfully updated employee");
 	} catch (error) {
 		logger.error(`${error.message}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -231,16 +217,15 @@ export const updateEmployee = async (req: any, res: any) => {
 	}
 };
 
-export const deleteEmployees = async (req: any, res: any) => {
+export const deleteEmployees = async (req: Request, res: Response) => {
 	const query = Object.keys(req.query).length;
 	if (query > 0) {
 		try {
 			const result = await deleteManyEmployees({ _id: req.query._id });
-			if (result.n > 0) {
-				res.status(201).send("successfully deleted all employees");
-			} else {
-				throw new Error("no data found");
+			if (!result) {
+				return res.status(404).send("no data found for deletion");
 			}
+			res.status(201).send("successfully deleted all employees");
 		} catch (error) {
 			logger.error(`${error.message}`, {
 				filePath: __filename.slice(__dirname.length + 1),
@@ -253,11 +238,10 @@ export const deleteEmployees = async (req: any, res: any) => {
 	} else {
 		try {
 			const result = await deleteManyEmployees();
-			if (result.n > 0) {
-				res.status(201).send("successfully deleted all employees");
-			} else {
-				throw new Error("no data found");
+			if (!result) {
+				return res.status(404).send("no data found for deletion");
 			}
+			res.status(201).send("successfully deleted all employees");
 		} catch (error) {
 			logger.error(`${error.message}`, {
 				filePath: __filename.slice(__dirname.length + 1),
@@ -270,17 +254,14 @@ export const deleteEmployees = async (req: any, res: any) => {
 	}
 };
 
-export const deleteSingleEmployee = async (req: any, res: any) => {
+export const deleteSingleEmployee = async (req: Request, res: Response) => {
 	const employeeId = req.params.employeeId;
 	try {
 		const result = await deleteOneEmployee({ _id: employeeId });
-		console.log(result);
-
-		if (result.n > 0) {
-			res.status(201).send("successfully deleted the employee");
-		} else {
-			throw new Error("no data found");
+		if (!result) {
+			return res.status(404).send("no data found for deletion");
 		}
+		res.status(201).send("successfully deleted the employee");
 	} catch (error) {
 		logger.error(`${error.message}`, {
 			filePath: __filename.slice(__dirname.length + 1),
