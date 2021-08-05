@@ -7,7 +7,7 @@ import Company from "../model/company";
 
 export const findCompanies = (
 	obj: Record<string, any>
-): Promise<PostCompanyValidation> => {
+): Promise<Array<PostCompanyValidation>> => {
 	return Company.find(obj);
 };
 

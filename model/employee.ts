@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 import { contactNumber, email, DOB } from "../const/regex";
-import { designation } from "../const/enum";
+import { DESIGNATION } from "../const/enum";
 const employeeSchema = new mongoose.Schema(
 	{
 		firstName: {
@@ -50,7 +50,7 @@ const employeeSchema = new mongoose.Schema(
 		designation: {
 			type: String,
 			required: true,
-			enum: designation,
+			enum: DESIGNATION,
 		},
 		salary: {
 			type: Number,

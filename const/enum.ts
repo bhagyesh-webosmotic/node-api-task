@@ -1,5 +1,5 @@
-export enum designation {
-	"developer",
-	"leader",
-	"manager",
+export enum DESIGNATION {
+	"DEVELOPER" = "DEVELOPER",
+	"LEADER" = "LEADER",
+	"MANAGER" = "MANAGER",
 }

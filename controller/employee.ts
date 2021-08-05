@@ -14,7 +14,7 @@ import {
 	deleteOneEmployee,
 } from "../DAO/employee";
 import { PostEmployeeValidation } from "../middleware/req-body-validation";
-
+import { DESIGNATION } from "../const/enum";
 export const getEmployees = async (req: Request | any, res: Response) => {
 	try {
 		const checkIfManager = await findOneEmployee({
@@ -119,9 +119,9 @@ export const postEmployee = async (req: Request | any, res: Response) => {
 		const newEmployee = new Employee(reqBody);
 
 		if (
-			(managerExists && reqBody.designation != "manager") ||
-			reqBody.designation != "manager" ||
-			(!managerExists && reqBody.designation == "manager")
+			(managerExists && reqBody.designation != DESIGNATION.MANAGER) ||
+			reqBody.designation != DESIGNATION.MANAGER ||
+			(!managerExists && reqBody.designation == DESIGNATION.MANAGER)
 		) {
 			const isMailSent = await sendMail(
 				reqBody.email,

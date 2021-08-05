@@ -7,7 +7,7 @@ import Employee from "../model/employee";
 
 export const findEmployees = (
 	filterObj: Record<string, any>
-): Promise<PostEmployeeValidation> => {
+): Promise<Array<PostEmployeeValidation>> => {
 	return Employee.find(filterObj);
 };
 
