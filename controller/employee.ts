@@ -65,7 +65,7 @@ export const getSingleEmployee = async (req: Request | any, res: Response) => {
 			return res.status(201).send(result);
 		} else {
 			if (req.id != employeeId) {
-				return res.status(401).send("you are not allowed to access this data");
+				return res.status(403).send("you are not allowed to access this data");
 			}
 			const result = await findOneEmployee({ _id: req.id });
 			return res.status(201).send(result);
@@ -128,7 +128,8 @@ export const postEmployee = async (req: Request | any, res: Response) => {
 				"verify account",
 				`${random}`
 			);
-			if (!isMailSent) {
+
+			if (isMailSent.accepted.length === 0 && isMailSent.rejected.length > 0) {
 				return res.status(500).send("cannot create employee, please try again");
 			}
 			const result = await newEmployee.save();
@@ -162,7 +163,7 @@ export const updateMultipleEmployees = async (req: Request, res: Response) => {
 					$set: iterator,
 				}
 			);
-			if (result == null) {
+			if (result === null) {
 				exit += 1;
 			}
 		}
@@ -222,10 +223,12 @@ export const deleteEmployees = async (req: Request, res: Response) => {
 	if (query > 0) {
 		try {
 			const result = await deleteManyEmployees({ _id: req.query._id });
-			if (!result) {
+			if (result.deletedCount === 0) {
 				return res.status(404).send("no data found for deletion");
 			}
-			res.status(201).send("successfully deleted all employees");
+			res
+				.status(201)
+				.send(`successfully deleted ${result.deletedCount}employees`);
 		} catch (error) {
 			logger.error(`${error.message}`, {
 				filePath: __filename.slice(__dirname.length + 1),
@@ -238,7 +241,7 @@ export const deleteEmployees = async (req: Request, res: Response) => {
 	} else {
 		try {
 			const result = await deleteManyEmployees();
-			if (!result) {
+			if (result.deletedCount === 0) {
 				return res.status(404).send("no data found for deletion");
 			}
 			res.status(201).send("successfully deleted all employees");
@@ -258,7 +261,7 @@ export const deleteSingleEmployee = async (req: Request, res: Response) => {
 	const employeeId = req.params.employeeId;
 	try {
 		const result = await deleteOneEmployee({ _id: employeeId });
-		if (!result) {
+		if (result.deletedCount === 0) {
 			return res.status(404).send("no data found for deletion");
 		}
 		res.status(201).send("successfully deleted the employee");

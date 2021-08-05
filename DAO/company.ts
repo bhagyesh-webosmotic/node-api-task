@@ -1,4 +1,8 @@
-import { PostCompanyValidation } from "../middleware/req-body-validation";
+import {
+	PostCompanyValidation,
+	MongoQueryUpdate,
+	MongoQueryDelete,
+} from "../middleware/req-body-validation";
 import Company from "../model/company";
 
 export const findCompanies = (
@@ -16,18 +20,18 @@ export const findOneCompany = (
 export const updateOneCompany = (
 	filterObj?: Record<string, any>,
 	UpdateObj?: Record<string, any>
-): Promise<PostCompanyValidation> => {
+): Promise<MongoQueryUpdate> => {
 	return Company.updateOne(filterObj, UpdateObj, { upsert: true });
 };
 
 export const deleteManyCompanies = (
 	filterObj?: Record<string, any>
-): Promise<PostCompanyValidation> => {
+): Promise<MongoQueryDelete> => {
 	return Company.deleteMany(filterObj);
 };
 
 export const deleteOneCompany = (
 	filterObj?: Record<string, any>
-): Promise<PostCompanyValidation> => {
+): Promise<MongoQueryDelete> => {
 	return Company.deleteOne(filterObj);
 };

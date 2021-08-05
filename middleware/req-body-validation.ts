@@ -22,3 +22,14 @@ export class PostCompanyValidation {
 	address!: string;
 	contactNumber!: number;
 }
+export class MongoQueryUpdate {
+	n!: number;
+	nModified!: number;
+	ok!: number;
+}
+
+export class MongoQueryDelete {
+	n!: number;
+	ok!: number;
+	deletedCount!: number;
+}

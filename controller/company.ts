@@ -99,7 +99,7 @@ export const updateCompany = async (req: Request, res: Response) => {
 				$set: reqBody,
 			}
 		);
-		if (!result) {
+		if (result.nModified === 0) {
 			return res
 				.status(404)
 				.send("no such data found to update, could not update the company");
@@ -119,7 +119,7 @@ export const updateCompany = async (req: Request, res: Response) => {
 export const deleteCompanies = async (req: Request, res: Response) => {
 	try {
 		const result = await deleteManyCompanies();
-		if (!result) {
+		if (result.deletedCount === 0) {
 			return res.status(404).send("no data found for deletion");
 		}
 		res.status(201).send("successfully deleted all companies");
@@ -138,7 +138,7 @@ export const deleteSingleCompany = async (req: Request, res: Response) => {
 	const companyId = req.params.companyId;
 	try {
 		const result = await deleteOneCompany({ _id: companyId });
-		if (!result) {
+		if (result.deletedCount === 0) {
 			return res.status(404).send("no data found for deletion");
 		}
 		res.status(201).send("successfully deleted company");

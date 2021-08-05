@@ -14,10 +14,10 @@ import {
 	deleteSingleCompany,
 } from "../controller/company";
 
-Router.get("/companies", getCompanies);
-Router.get("/companies/:companyId", getSingleCompany);
+Router.get("/", getCompanies);
+Router.get("/:companyId", getSingleCompany);
 Router.post(
-	"/addCompany",
+	"/",
 	logo.fields([{ name: "companyLogo", maxCount: 1 }]),
 	[
 		body("companyName")
@@ -55,11 +55,11 @@ Router.post(
 	postCompany
 );
 Router.put(
-	"/update-company/:companyId",
+	"/:companyId",
 	logo.fields([{ name: "companyLogo", maxCount: 1 }]),
 	updateCompany
 );
-Router.delete("/deleteAllCompanies", deleteCompanies);
-Router.delete("/deleteAllCompanies/:companyId", deleteSingleCompany);
+Router.delete("/", deleteCompanies);
+Router.delete("/:companyId", deleteSingleCompany);
 
 export default Router;

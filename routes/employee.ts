@@ -17,10 +17,10 @@ import {
 	deleteSingleEmployee,
 } from "../controller/employee";
 
-Router.get("/employees", isAuth, getEmployees);
-Router.get("/employees/:employeeId", isAuth, getSingleEmployee);
+Router.get("/", isAuth, getEmployees);
+Router.get("/:employeeId", isAuth, getSingleEmployee);
 Router.post(
-	"/addEmployee",
+	"/",
 	photo.fields([{ name: "employeePhoto", maxCount: 1 }]),
 	[
 		body("firstName")
@@ -65,12 +65,12 @@ Router.post(
 	postEmployee
 );
 Router.put(
-	"/update-employees/:employeeId",
+	"/:employeeId",
 	photo.fields([{ name: "employeePhoto", maxCount: 1 }]),
 	isAuth,
 	updateEmployee
 );
-Router.put("/update-employees", isAuth, updateMultipleEmployees);
-Router.delete("/deleteAllEmployees", isAuth, deleteEmployees);
-Router.delete("/deleteAllEmployees/:employeeId", isAuth, deleteSingleEmployee);
+Router.put("/", isAuth, updateMultipleEmployees);
+Router.delete("/", isAuth, deleteEmployees);
+Router.delete("/:employeeId", isAuth, deleteSingleEmployee);
 export default Router;
