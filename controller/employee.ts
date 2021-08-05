@@ -20,10 +20,10 @@ export const getEmployees = async (req: Request | any, res: Response) => {
 		const checkIfManager = await findOneEmployee({
 			_id: req.id,
 		});
-		if (checkIfManager.designation === "manager") {
+		if (checkIfManager.designation === DESIGNATION.MANAGER) {
 			const result = await findEmployees({});
 			return res.status(201).send(result);
-		} else if (checkIfManager.designation === "leader") {
+		} else if (checkIfManager.designation === DESIGNATION.LEADER) {
 			const result = await findEmployees({ teamLeaderID: req.id });
 			if (!result) {
 				return res.status(404).send("no data found");
@@ -51,10 +51,10 @@ export const getSingleEmployee = async (req: Request | any, res: Response) => {
 			_id: req.id,
 		});
 
-		if (checkIfManager.designation === "manager") {
+		if (checkIfManager.designation === DESIGNATION.MANAGER) {
 			const result = await findOneEmployee({ _id: employeeId });
 			return res.status(201).send(result);
-		} else if (checkIfManager.designation === "leader") {
+		} else if (checkIfManager.designation === DESIGNATION.LEADER) {
 			const result = await findOneEmployee({
 				_id: employeeId,
 				teamLeaderID: req.id,

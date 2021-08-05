@@ -1,3 +1,5 @@
+import { DESIGNATION } from "../const/enum";
+
 export class PostEmployeeValidation {
 	_id!: string;
 	firstName!: string;
@@ -5,7 +7,7 @@ export class PostEmployeeValidation {
 	password!: string;
 	contactNumber!: number;
 	email!: string;
-	designation!: string;
+	designation!: DESIGNATION;
 	salary!: number;
 	DOB!: string;
 	photo!: string;
