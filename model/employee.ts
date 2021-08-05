@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 import { contactNumber, email, DOB } from "../const/regex";
-import { designation } from "../const/enum";
+import { DESIGNATION } from "../const/enum";
 const employeeSchema = new mongoose.Schema(
 	{
 		firstName: {
@@ -18,12 +18,16 @@ const employeeSchema = new mongoose.Schema(
 			minlength: 1,
 			maxlength: 20,
 		},
+		password: {
+			type: String,
+			required: [true, "Password required"],
+		},
 		contactNumber: {
 			type: Number,
 			required: true,
 			trim: true,
 			validate: {
-				validator: function (v: any) {
+				validator: function (v: string) {
 					var re = contactNumber;
 					return v == null || re.test(v);
 				},
@@ -36,7 +40,7 @@ const employeeSchema = new mongoose.Schema(
 			trim: true,
 			lowercase: true,
 			validate: {
-				validator: function (v: any) {
+				validator: function (v: string) {
 					return email.test(v);
 				},
 				message: "Please enter a valid email",
@@ -46,7 +50,7 @@ const employeeSchema = new mongoose.Schema(
 		designation: {
 			type: String,
 			required: true,
-			enum: designation,
+			enum: DESIGNATION,
 		},
 		salary: {
 			type: Number,
@@ -65,7 +69,7 @@ const employeeSchema = new mongoose.Schema(
 			minlength: 1,
 			maxlength: 100,
 			validate: {
-				validator: function (v: any) {
+				validator: function (v: string) {
 					return DOB.test(v);
 				},
 				message: `not a valid date`,
@@ -79,12 +83,17 @@ const employeeSchema = new mongoose.Schema(
 			maxlength: 500,
 			required: true,
 		},
-		companyId: {
-			type: String,
-			trim: true,
-			minlength: 1,
-			maxlength: 100,
+		verified: {
+			type: Boolean,
 			required: true,
+		},
+		teamLeaderID: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Employee",
+		},
+		companyId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Company",
 		},
 	},
 	{ timestamps: true }

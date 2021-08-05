@@ -18,12 +18,16 @@
 		// "rootDir": "./",                             /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
 		"rootDirs": [
 			"./",
+			"./const/",
 			"./controller",
-			"./model",
-			"./routes",
+			"./DAO/",
+			"./email/",
+			"./logger/",
 			"./logs",
+			"./middleware/",
+			"./model",
 			"./multer",
-			"./const/"
+			"./routes"
 		],
 		// "composite": true,                           /* Enable project compilation */
 		// "tsBuildInfoFile": "./",                     /* Specify file to store incremental compilation information */

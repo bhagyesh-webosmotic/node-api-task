@@ -1,27 +1,25 @@
 import path from "path";
+import { validationResult } from "express-validator";
+import { Request, Response } from "express";
 
 import Company from "../model/company";
-import { logger } from "../logs/logger";
+import { logger } from "../logger/logger";
+import {
+	findCompanies,
+	findOneCompany,
+	updateOneCompany,
+	deleteManyCompanies,
+	deleteOneCompany,
+} from "../DAO/company";
+import { PostCompanyValidation } from "../middleware/req-body-validation";
 
-const getCompanies = (req: any, res: any) => {
+export const getCompanies = async (req: Request, res: Response) => {
 	try {
-		Company.find()
-			.then((result: any) => {
-				res.status(201).send(result);
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `getCompanies`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+		const result = await findCompanies({});
+		if (!result) {
+			return res.status(404).send("company not found");
+		}
+		res.status(201).send(result);
 	} catch (error) {
 		logger.error(`${error}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -33,26 +31,14 @@ const getCompanies = (req: any, res: any) => {
 	}
 };
 
-const getSingleCompany = (req: any, res: any) => {
-	const companyID = req.params.companyID;
+export const getSingleCompany = async (req: Request, res: Response) => {
+	const companyId = req.params.companyId;
 	try {
-		Company.findOne({ _id: companyID })
-			.then((result: any) => {
-				res.status(201).send(result);
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `getSingleCompany`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+		const result = await findOneCompany({ _id: companyId });
+		if (!result) {
+			return res.status(404).send("company not found");
+		}
+		res.status(201).send(result);
 	} catch (error) {
 		logger.error(`${error}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -64,41 +50,34 @@ const getSingleCompany = (req: any, res: any) => {
 	}
 };
 
-const postCompany = (req: any, res: any) => {
-	const Name = req.body.companyName;
-	const Logo = req.files["companyLogo"][0].path;
-	const Email = req.body.companyEmail;
-	const Address = req.body.companyAddress;
-	const ContactNumber = req.body.companyContactNumber;
-	try {
-		const newCompany = new Company({
-			name: Name,
-			logo: Logo,
-			email: Email,
-			address: Address,
-			contactNumber: ContactNumber,
+export const postCompany = async (req: Request | any, res: Response) => {
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(422).json({
+			message: "validation failed entered data is incorrect",
+			errors: errors.array(),
 		});
-		newCompany
-			.save()
-			.then((result: any) => {
-				res.status(201).json({
-					message: "successfully created company",
-					data: result,
-				});
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `postCompany`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+	}
+
+	try {
+		const reqBody = new PostCompanyValidation();
+		reqBody.name = req.body.companyName;
+		reqBody.logo = req.files["companyLogo"][0].path;
+		reqBody.email = req.body.companyEmail;
+		reqBody.address = req.body.companyAddress;
+		reqBody.contactNumber = req.body.companyContactNumber;
+		const newCompany = new Company(reqBody);
+
+		const result = await newCompany.save();
+		if (!result) {
+			return res
+				.status(500)
+				.send("something went wrong, could not create company");
+		}
+		res.status(201).json({
+			message: "successfully created company",
+			data: result,
+		});
 	} catch (error) {
 		logger.error(`${error.message}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -110,44 +89,22 @@ const postCompany = (req: any, res: any) => {
 	}
 };
 
-const updateCompany = (req: any, res: any) => {
-	const companyID = req.params.companyID;
-	const Name = req.body.companyName;
-	const Logo = req.files["companyLogo"][0].path;
-	const Email = req.body.companyEmail;
-	const Address = req.body.companyAddress;
-	const ContactNumber = req.body.companyContactNumber;
+export const updateCompany = async (req: Request, res: Response) => {
+	const companyId = req.params.companyId;
+	const reqBody = req.body;
 	try {
-		Company.updateOne(
-			{ _id: companyID },
+		const result = await updateOneCompany(
+			{ _id: companyId },
 			{
-				name: Name,
-				logo: Logo,
-				email: Email,
-				address: Address,
-				contactNumber: ContactNumber,
-			},
-			{ upsert: true }
-		)
-			.then((result: any) => {
-				res.status(201).json({
-					message: "successfully updated company",
-					data: result,
-				});
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `updateCompany`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+				$set: reqBody,
+			}
+		);
+		if (result.nModified === 0) {
+			return res
+				.status(404)
+				.send("no such data found to update, could not update the company");
+		}
+		res.status(201).send("successfully updated company");
 	} catch (error) {
 		logger.error(`${error.message}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -159,25 +116,13 @@ const updateCompany = (req: any, res: any) => {
 	}
 };
 
-const deleteCompanies = (req: any, res: any) => {
+export const deleteCompanies = async (req: Request, res: Response) => {
 	try {
-		Company.deleteMany()
-			.then((result: any) => {
-				res.status(201).send("successfully deleted all companies");
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `deleteCompanies`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+		const result = await deleteManyCompanies();
+		if (result.deletedCount === 0) {
+			return res.status(404).send("no data found for deletion");
+		}
+		res.status(201).send("successfully deleted all companies");
 	} catch (error) {
 		logger.error(`${error.message}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -189,26 +134,14 @@ const deleteCompanies = (req: any, res: any) => {
 	}
 };
 
-const deleteSingleCompany = (req: any, res: any) => {
-	const companyID = req.params.companyID;
+export const deleteSingleCompany = async (req: Request, res: Response) => {
+	const companyId = req.params.companyId;
 	try {
-		Company.deleteOne({ _id: companyID })
-			.then((result: any) => {
-				res.status(201).send("successfully deleted the company");
-			})
-			.catch((err: any) => {
-				console.log(err);
-				logger.error(`${err}`, {
-					filePath: __filename.slice(__dirname.length + 1),
-					fileName: path.dirname(__filename),
-					req: req.method,
-					methodName: `deleteSingleCompany`,
-				});
-				res.status(500).json({
-					message: "something went wrong",
-					data: err,
-				});
-			});
+		const result = await deleteOneCompany({ _id: companyId });
+		if (result.deletedCount === 0) {
+			return res.status(404).send("no data found for deletion");
+		}
+		res.status(201).send("successfully deleted company");
 	} catch (error) {
 		logger.error(`${error.message}`, {
 			filePath: __filename.slice(__dirname.length + 1),
@@ -218,13 +151,4 @@ const deleteSingleCompany = (req: any, res: any) => {
 		});
 		return res.status(500).send(error.message);
 	}
-};
-
-export {
-	getCompanies,
-	getSingleCompany,
-	postCompany,
-	updateCompany,
-	deleteCompanies,
-	deleteSingleCompany,
 };
